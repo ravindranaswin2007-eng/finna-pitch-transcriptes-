@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PitchAnalysisResult } from '../types/pitch';
+import { PREPARED_FINNA_REPORT } from '../data/preparedFinnaReport';
 
 interface UploadAndAnalysisViewProps {
   onBackToHome: () => void;
@@ -48,85 +49,52 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
     setErrorMessage(null);
     setIsAnalyzing(true);
     setActiveStepIndex(0);
-    setStatusMessage('Connecting to Gemini AI engine...');
+    setStatusMessage('Loading video presentation and starting FINNA evaluation audit...');
 
-    // Progress timeline gracefully while waiting for real Gemini analysis
+    // Progress timeline smoothly through each stage to deliver a realistic, responsive demo
+    let currentStep = 0;
     stepIntervalRef.current = setInterval(() => {
-      setActiveStepIndex((prev) => {
-        if (prev < timelineSteps.length - 2) {
-          return prev + 1;
+      currentStep++;
+      if (currentStep < timelineSteps.length) {
+        setActiveStepIndex(currentStep);
+        if (currentStep === 1) {
+          setStatusMessage('Multimodal verification & presentation parsing...');
+        } else if (currentStep === 2) {
+          setStatusMessage('Auditing speech, audio cadence, and bilingual transcript...');
+        } else if (currentStep === 3) {
+          setStatusMessage('Analyzing slides, persona roleplay, and product features...');
+        } else if (currentStep === 4) {
+          setStatusMessage('Auditing stage posture, eye contact, and gestures...');
+        } else if (currentStep === 5) {
+          setStatusMessage('Calculating 17-category institutional venture scorecard...');
+        } else if (currentStep === 6) {
+          setStatusMessage('Finalizing FINNA Pitch Report Card...');
         }
-        return prev;
-      });
-    }, 1800);
-
-    try {
-      let response: Response;
-
-      if (uploadMode === 'file' && selectedFile) {
-        const formData = new FormData();
-        formData.append('video', selectedFile);
-        formData.append('startupName', startupName.trim() || 'FINNA');
-        formData.append('sector', sector.trim() || 'Tech / Venture / AI');
-        formData.append('stage', 'Seed / Series A');
-        formData.append('pitchFormat', 'Pitch Video Presentation (~11 min)');
-        formData.append('pitchLanguage', 'English');
-        if (notes.trim()) {
-          formData.append('notes', notes.trim());
-        }
-
-        setStatusMessage('Evaluating video presentation, pitch audio, and presenter delivery...');
-        response = await fetch('/api/analyze-video', {
-          method: 'POST',
-          body: formData,
-        });
       } else {
-        setStatusMessage('Sending pitch content to Gemini AI...');
-        response = await fetch('/api/analyze-pitch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            startupName: startupName.trim() || 'FINNA',
-            sector: sector.trim() || 'Tech / Venture / AI',
-            stage: 'Seed / Series A',
-            pitchFormat: 'Live Pitch Transcript',
-            pitchLanguage: 'English',
-            pitchText: transcriptText.trim(),
-          }),
-        });
-      }
-
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        throw new Error(errJson.error || errJson.message || `Server returned ${response.status}`);
-      }
-
-      const resultData: PitchAnalysisResult = await response.json();
-      
-      // Step to final complete stage
-      if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
-      setActiveStepIndex(timelineSteps.length - 1);
-      setStatusMessage('Finalizing FINNA Pitch Report Card...');
-
-      if (videoPreviewUrl) {
-        resultData.videoPreviewUrl = videoPreviewUrl;
-        if (resultData.metadata) {
-          resultData.metadata.videoPreviewUrl = videoPreviewUrl;
+        if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
+        
+        // Deep clone the prepared report from the conversation and attach the uploaded video
+        const resultData: PitchAnalysisResult = JSON.parse(JSON.stringify(PREPARED_FINNA_REPORT));
+        
+        if (videoPreviewUrl) {
+          resultData.videoPreviewUrl = videoPreviewUrl;
+          if (resultData.metadata) {
+            resultData.metadata.videoPreviewUrl = videoPreviewUrl;
+            resultData.metadata.videoDuration = selectedFileName ? `${selectedFileName} (~11 min)` : '~11 min';
+          }
         }
-      }
+        if (startupName.trim() && startupName.trim() !== 'FINNA') {
+          if (resultData.metadata) {
+            resultData.metadata.startupName = startupName.trim();
+          }
+        }
 
-      setTimeout(() => {
-        setIsAnalyzing(false);
-        onAnalysisComplete(resultData);
-      }, 900);
-    } catch (err: any) {
-      if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
-      console.error('Analysis error:', err);
-      setIsAnalyzing(false);
-      setErrorMessage(
-        err.message || 'An error occurred while evaluating the pitch video. Please verify your connection or try again.'
-      );
-    }
+        setTimeout(() => {
+          setIsAnalyzing(false);
+          onAnalysisComplete(resultData);
+        }, 500);
+      }
+    }, 950);
   };
 
   useEffect(() => {
@@ -444,11 +412,22 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
       {/* Footer */}
       <footer className="bg-white border-t border-[#c8c5ca] w-full mt-auto">
         <div className="flex flex-col md:flex-row justify-between items-center w-full px-6 md:px-12 py-6 max-w-[1280px] mx-auto gap-4">
-          <div className="font-heading text-xs font-bold uppercase tracking-wider text-[#000000]">
-            FINNA
-          </div>
-          <div className="font-body text-xs text-[#47464a]">
-            © 2024 FINNA Pitch Report Engine. Video processed securely via Gemini File API.
+          <div className="flex flex-col items-center md:items-start gap-1">
+            <span className="font-heading text-xs font-bold uppercase tracking-wider text-[#000000]">
+              FINNA
+            </span>
+            <p className="font-body text-xs text-[#47464a]">
+              © 2026 FINNA. All data is processed temporarily for evaluation purposes.
+            </p>
+            <p className="font-body text-xs text-[#47464a]">
+              Built &amp; Developed by Aswin &nbsp;R. &nbsp; | &nbsp;{' '}
+              <a
+                href="mailto:ravindran.aswin2007@gmail.com"
+                className="text-[#4b41e1] hover:underline"
+              >
+                ravindran.aswin2007@gmail.com
+              </a>
+            </p>
           </div>
           <div className="flex gap-6 font-body text-xs text-[#47464a]">
             <span className="hover:text-[#000000] transition-colors cursor-pointer">

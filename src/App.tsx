@@ -383,7 +383,16 @@ export default function App() {
               FINNA
             </span>
             <p className="font-body text-xs text-[#71717a]">
-              © 2024 FINNA. Universal AI Pitch Evaluation & Jury Intelligence System.
+              © 2026 FINNA. All data is processed temporarily for evaluation purposes.
+            </p>
+            <p className="font-body text-xs text-[#71717a]">
+              Built &amp; Developed by Aswin &nbsp;R. &nbsp; | &nbsp;{' '}
+              <a
+                href="mailto:ravindran.aswin2007@gmail.com"
+                className="text-[#4f46e5] hover:underline"
+              >
+                ravindran.aswin2007@gmail.com
+              </a>
             </p>
           </div>
           <div className="flex items-center gap-6 text-xs text-[#71717a] font-body">

@@ -1,0 +1,6 @@
+{
+  "name": "FINNA - AI Pitch Evaluation & Jury Intelligence",
+  "description": "Upload startup or project pitches and receive an investor, product, technical and simulated jury-level evaluation before the real one.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

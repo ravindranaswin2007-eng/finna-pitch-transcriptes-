@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { PitchAnalysisResult } from './types/pitch';
+import { SignInView } from './components/SignInView';
+import { HowItWorksModal, AboutModal } from './components/InfoModals';
 import { LandingHeroView } from './components/LandingHeroView';
 import { UploadAndAnalysisView } from './components/UploadAndAnalysisView';
 import { ExecutiveSummaryView } from './components/ExecutiveSummaryView';
@@ -13,6 +15,10 @@ import { TranscriptView } from './components/TranscriptView';
 import { JurySparring } from './components/JurySparring';
 import { PdfReportCard } from './components/PdfReportCard';
 import { PitchAnalyzerModal } from './components/PitchAnalyzerModal';
+import { GlassmorphicBackground } from './components/GlassmorphicBackground';
+import { SpideyFloatingHost, SpideyBadge } from './components/SpideyHostBot';
+import { finnaAudio } from './utils/audioFeedback';
+import { spideyVoice } from './utils/spideyVoice';
 
 type AppScreen = 'landing' | 'upload' | 'dashboard';
 type DashboardTab =
@@ -28,6 +34,14 @@ type DashboardTab =
   | 'pdf-report';
 
 export default function App() {
+  const [authenticatedEmail, setAuthenticatedEmail] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem('finna_user_email');
+    } catch {
+      return null;
+    }
+  });
+
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('landing');
   const [activePitchKey, setActivePitchKey] = useState<string | null>(null);
   const [analyzedPitches, setAnalyzedPitches] = useState<Record<string, PitchAnalysisResult>>({});
@@ -35,6 +49,34 @@ export default function App() {
   const [activeSparringPersonaId, setActiveSparringPersonaId] = useState<string>('vc');
   const [isAnalyzerModalOpen, setIsAnalyzerModalOpen] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState<boolean>(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState<boolean>(false);
+  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [isSoundOn, setIsSoundOn] = useState<boolean>(finnaAudio.getSoundEnabled());
+
+  const handleSignInSuccess = (email: string) => {
+    setAuthenticatedEmail(email);
+    try {
+      sessionStorage.setItem('finna_user_email', email);
+    } catch {
+      // Ignore
+    }
+    finnaAudio.playUploadCompleted();
+    setCurrentScreen('landing');
+  };
+
+  const handleSignOut = () => {
+    setAuthenticatedEmail(null);
+    try {
+      sessionStorage.removeItem('finna_user_email');
+    } catch {
+      // Ignore
+    }
+  };
+
+  const toggleSound = () => {
+    const newState = finnaAudio.toggleSound();
+    setIsSoundOn(newState);
+  };
 
   // Active pitch data (null until first pitch is analyzed)
   const activePitchData: PitchAnalysisResult | null =
@@ -59,35 +101,98 @@ export default function App() {
     setTimeout(() => setCopiedToast(false), 2500);
   };
 
+  // 0. Simple Sign In Gate (First screen)
+  if (!authenticatedEmail) {
+    return (
+      <>
+        <GlassmorphicBackground />
+        <SignInView
+          onSignInSuccess={handleSignInSuccess}
+          onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
+          onOpenAbout={() => setIsAboutOpen(true)}
+        />
+        <SpideyFloatingHost currentContext="signin" />
+        <HowItWorksModal
+          isOpen={isHowItWorksOpen}
+          onClose={() => setIsHowItWorksOpen(false)}
+        />
+        <AboutModal
+          isOpen={isAboutOpen}
+          onClose={() => setIsAboutOpen(false)}
+        />
+      </>
+    );
+  }
+
   // 1. Landing Screen (Starts in clean state)
   if (currentScreen === 'landing') {
     return (
-      <LandingHeroView
-        onStartUpload={() => setCurrentScreen('upload')}
-        onTryDemo={() => setCurrentScreen('upload')}
-        onNavigateToHowItWorks={() => setCurrentScreen('upload')}
-        onNavigateToAbout={() => setCurrentScreen('upload')}
-      />
+      <>
+        <GlassmorphicBackground />
+        <LandingHeroView
+          onStartUpload={() => setCurrentScreen('upload')}
+          onTryDemo={() => setCurrentScreen('upload')}
+          onNavigateToHowItWorks={() => setIsHowItWorksOpen(true)}
+          onNavigateToAbout={() => setIsAboutOpen(true)}
+        />
+        <SpideyFloatingHost currentContext="landing" />
+        <HowItWorksModal
+          isOpen={isHowItWorksOpen}
+          onClose={() => setIsHowItWorksOpen(false)}
+        />
+        <AboutModal
+          isOpen={isAboutOpen}
+          onClose={() => setIsAboutOpen(false)}
+        />
+      </>
     );
   }
 
   // 2. Upload / Processing Timeline Screen
   if (currentScreen === 'upload') {
     return (
-      <UploadAndAnalysisView
-        onBackToHome={() => setCurrentScreen('landing')}
-        onAnalysisComplete={handleAnalysisComplete}
-      />
+      <>
+        <GlassmorphicBackground />
+        <UploadAndAnalysisView
+          onBackToHome={() => setCurrentScreen('landing')}
+          onAnalysisComplete={handleAnalysisComplete}
+          onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
+          onOpenAbout={() => setIsAboutOpen(true)}
+        />
+        <SpideyFloatingHost currentContext="upload" />
+        <HowItWorksModal
+          isOpen={isHowItWorksOpen}
+          onClose={() => setIsHowItWorksOpen(false)}
+        />
+        <AboutModal
+          isOpen={isAboutOpen}
+          onClose={() => setIsAboutOpen(false)}
+        />
+      </>
     );
   }
 
   // 3. If dashboard is visited without any analyzed pitch data, redirect to upload
   if (!activePitchData) {
     return (
-      <UploadAndAnalysisView
-        onBackToHome={() => setCurrentScreen('landing')}
-        onAnalysisComplete={handleAnalysisComplete}
-      />
+      <>
+        <GlassmorphicBackground />
+        <UploadAndAnalysisView
+          onBackToHome={() => setCurrentScreen('landing')}
+          onAnalysisComplete={handleAnalysisComplete}
+          onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
+          onOpenAbout={() => setIsAboutOpen(true)}
+        />
+        <SpideyFloatingHost currentContext="upload" />
+        <HowItWorksModal
+          isOpen={isHowItWorksOpen}
+          onClose={() => setIsHowItWorksOpen(false)}
+        />
+        <AboutModal
+          isOpen={isAboutOpen}
+          onClose={() => setIsAboutOpen(false)}
+        />
+      </>
     );
   }
 
@@ -113,9 +218,10 @@ export default function App() {
     7.8;
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-[#0a0a0a] flex flex-col font-sans selection:bg-[#4f46e5] selection:text-white">
+    <div className="min-h-screen bg-transparent text-[#0a0a0a] flex flex-col font-sans selection:bg-[#4f46e5] selection:text-white relative">
+      <GlassmorphicBackground />
       {/* Top Navbar */}
-      <header className="bg-white border-b border-[#e4e4e7] sticky top-0 z-50">
+      <header className="bg-white/85 backdrop-blur-md border-b border-[#e4e4e7] sticky top-0 z-50">
         <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-3.5 flex items-center justify-between gap-4">
           {/* Back & Logo */}
           <div className="flex items-center gap-4">
@@ -360,11 +466,26 @@ export default function App() {
         )}
       </main>
 
+      {/* Floating Host Spidey Assistant */}
+      <SpideyFloatingHost currentContext="dashboard" startupName={activePitchData.metadata.startupName} />
+
       {/* Modal for Analyzing Any New Startup Pitch */}
       <PitchAnalyzerModal
         isOpen={isAnalyzerModalOpen}
         onClose={() => setIsAnalyzerModalOpen(false)}
         onAnalysisComplete={handleAnalysisComplete}
+      />
+
+      {/* How It Works Modal */}
+      <HowItWorksModal
+        isOpen={isHowItWorksOpen}
+        onClose={() => setIsHowItWorksOpen(false)}
+      />
+
+      {/* About Developer Modal */}
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
       />
 
       {/* Toast Notification */}
@@ -396,6 +517,18 @@ export default function App() {
             </p>
           </div>
           <div className="flex items-center gap-6 text-xs text-[#71717a] font-body">
+            <span
+              onClick={() => setIsHowItWorksOpen(true)}
+              className="hover:text-[#0a0a0a] transition-colors cursor-pointer"
+            >
+              How it works
+            </span>
+            <span
+              onClick={() => setIsAboutOpen(true)}
+              className="hover:text-[#0a0a0a] transition-colors cursor-pointer"
+            >
+              About
+            </span>
             <span
               onClick={() => setCurrentScreen('landing')}
               className="hover:text-[#0a0a0a] transition-colors cursor-pointer"

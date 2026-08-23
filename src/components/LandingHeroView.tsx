@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { SpideyBadge } from './SpideyHostBot';
+import { spideyVoice } from '../utils/spideyVoice';
 
 interface LandingHeroViewProps {
   onStartUpload: () => void;
@@ -13,10 +15,17 @@ export const LandingHeroView: React.FC<LandingHeroViewProps> = ({
   onNavigateToHowItWorks,
   onNavigateToAbout
 }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      spideyVoice.speakIntroGreeting();
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#fbfbfb] text-[#09090b] flex flex-col font-sans selection:bg-[#4f46e5] selection:text-white">
+    <div className="min-h-screen bg-transparent text-[#09090b] flex flex-col font-sans selection:bg-[#4f46e5] selection:text-white relative">
       {/* Top Navigation Bar */}
-      <header className="bg-white border-b border-[#e4e4e7] w-full sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-[#e4e4e7] w-full sticky top-0 z-50">
         <div className="flex justify-between items-center w-full px-6 md:px-12 py-3.5 max-w-[1280px] mx-auto">
           {/* Brand Logo */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -32,13 +41,13 @@ export const LandingHeroView: React.FC<LandingHeroViewProps> = ({
           <nav className="hidden md:flex items-center gap-8">
             <button
               onClick={onNavigateToHowItWorks}
-              className="text-[#52525b] hover:text-[#4f46e5] transition-colors duration-200 text-xs font-semibold uppercase tracking-wider font-heading"
+              className="text-[#52525b] hover:text-[#4f46e5] transition-colors duration-200 text-xs font-semibold uppercase tracking-wider font-heading cursor-pointer"
             >
               How it works
             </button>
             <button
               onClick={onNavigateToAbout}
-              className="text-[#52525b] hover:text-[#4f46e5] transition-colors duration-200 text-xs font-semibold uppercase tracking-wider font-heading"
+              className="text-[#52525b] hover:text-[#4f46e5] transition-colors duration-200 text-xs font-semibold uppercase tracking-wider font-heading cursor-pointer"
             >
               About
             </button>
@@ -48,7 +57,7 @@ export const LandingHeroView: React.FC<LandingHeroViewProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={onStartUpload}
-              className="text-xs font-semibold uppercase tracking-wider bg-[#09090b] text-white px-5 py-2 rounded-full hover:bg-[#27272a] transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:ring-offset-2"
+              className="text-xs font-semibold uppercase tracking-wider bg-[#09090b] text-white px-5 py-2 rounded-full hover:bg-[#27272a] transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:ring-offset-2 cursor-pointer"
             >
               Get Started
             </button>
@@ -57,17 +66,15 @@ export const LandingHeroView: React.FC<LandingHeroViewProps> = ({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-grow flex flex-col items-center justify-center px-6 md:px-12 py-16 md:py-24 max-w-[1280px] mx-auto w-full">
+      <main className="flex-grow flex flex-col items-center justify-center px-6 md:px-12 py-16 md:py-24 max-w-[1280px] mx-auto w-full relative z-10">
         {/* Hero Section */}
         <section className="w-full flex flex-col items-center text-center max-w-3xl mx-auto mb-16 md:mb-20">
-          {/* Label Badge */}
-          <div className="mb-6 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f4f4f5] border border-[#e4e4e7]">
-            <span className="material-symbols-outlined text-[14px] text-[#52525b]">
-              robot_2
-            </span>
-            <span className="text-[11px] font-semibold text-[#52525b] tracking-wider uppercase font-heading">
-              AI PITCH EVALUATION
-            </span>
+          {/* Label Badge with Blinking Host Spidey Bot */}
+          <div className="mb-6">
+            <SpideyBadge
+              label="AI PITCH EVALUATION"
+              onClick={() => spideyVoice.speakIntroGreeting()}
+            />
           </div>
 
           {/* Headlines */}

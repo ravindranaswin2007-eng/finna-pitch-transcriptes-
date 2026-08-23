@@ -49,6 +49,114 @@
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
+/* Spidey Bot Eye Blinking Keyframes */
+@keyframes bot-eye-blink {
+  0%, 90%, 100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.12);
+  }
+}
+
+.bot-eye-blinking {
+  transform-origin: center;
+  animation: bot-eye-blink 3.6s infinite ease-in-out;
+}
+
+/* Glassmorphism Floating Gradient Orbs */
+@keyframes float-orb-slow-1 {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(50px, -60px, 0) scale(1.1) rotate(4deg);
+  }
+  66% {
+    transform: translate3d(-40px, 35px, 0) scale(0.92) rotate(-3deg);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes float-orb-slow-2 {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(-60px, 45px, 0) scale(0.94) rotate(-5deg);
+  }
+  66% {
+    transform: translate3d(55px, -50px, 0) scale(1.08) rotate(6deg);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes float-orb-slow-3 {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
+  40% {
+    transform: translate3d(40px, 55px, 0) scale(1.06);
+  }
+  75% {
+    transform: translate3d(-35px, -30px, 0) scale(0.95);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
+}
+
+@keyframes float-orb-slow-4 {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(-50px, -45px, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(0.95);
+  }
+}
+
+@keyframes float-orb-slow-5 {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(35px, -35px, 0) scale(1.05);
+  }
+  66% {
+    transform: translate3d(-45px, 20px, 0) scale(0.96);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
+}
+
+.animate-float-orb-1 {
+  animation: float-orb-slow-1 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.animate-float-orb-2 {
+  animation: float-orb-slow-2 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.animate-float-orb-3 {
+  animation: float-orb-slow-3 24s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.animate-float-orb-4 {
+  animation: float-orb-slow-4 30s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.animate-float-orb-5 {
+  animation: float-orb-slow-5 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
 .nav-link {
   position: relative;
 }

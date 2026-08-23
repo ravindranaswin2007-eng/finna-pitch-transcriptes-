@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PitchAnalysisResult } from '../types/pitch';
 import { PREPARED_FINNA_REPORT } from '../data/preparedFinnaReport';
+import { finnaAudio } from '../utils/audioFeedback';
+import { SpideyBadge } from './SpideyHostBot';
+import { spideyVoice } from '../utils/spideyVoice';
 
 interface UploadAndAnalysisViewProps {
   onBackToHome: () => void;
   onAnalysisComplete: (result: PitchAnalysisResult) => void;
+  onOpenHowItWorks?: () => void;
+  onOpenAbout?: () => void;
 }
 
 export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
   onBackToHome,
-  onAnalysisComplete
+  onAnalysisComplete,
+  onOpenHowItWorks,
+  onOpenAbout,
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -23,6 +30,7 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
   const [uploadMode, setUploadMode] = useState<'file' | 'text'>('file');
   const [statusMessage, setStatusMessage] = useState('Preparing FINNA pitch evaluation engine...');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSoundOn, setIsSoundOn] = useState<boolean>(finnaAudio.getSoundEnabled());
 
   const timelineSteps = [
     { label: 'Video file received & loaded', icon: 'cloud_upload' },
@@ -35,6 +43,19 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
   ];
 
   const stepIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Host Spidey automatically greets and explains the process and next actions on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      spideyVoice.speakUploadGuide();
+    }, 450);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const toggleSoundControl = () => {
+    const newState = finnaAudio.toggleSound();
+    setIsSoundOn(newState);
+  };
 
   const handleStartAnalysis = async () => {
     if (uploadMode === 'file' && !selectedFile) {
@@ -50,8 +71,9 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
     setIsAnalyzing(true);
     setActiveStepIndex(0);
     setStatusMessage('Loading video presentation and starting FINNA evaluation audit...');
+    finnaAudio.playAnalysisStarted();
 
-    // Progress timeline smoothly through each stage to deliver a realistic, responsive demo
+    // Progress timeline smoothly through each stage with subtle notification sound cues
     let currentStep = 0;
     stepIntervalRef.current = setInterval(() => {
       currentStep++;
@@ -63,15 +85,19 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
           setStatusMessage('Auditing speech, audio cadence, and bilingual transcript...');
         } else if (currentStep === 3) {
           setStatusMessage('Analyzing slides, persona roleplay, and product features...');
+          finnaAudio.playPitchAnalysisCompleted();
         } else if (currentStep === 4) {
           setStatusMessage('Auditing stage posture, eye contact, and gestures...');
+          finnaAudio.playBodyLanguageCompleted();
         } else if (currentStep === 5) {
           setStatusMessage('Calculating 17-category institutional venture scorecard...');
+          finnaAudio.playReportGenerationStarted();
         } else if (currentStep === 6) {
           setStatusMessage('Finalizing FINNA Pitch Report Card...');
         }
       } else {
         if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
+        finnaAudio.playReportGenerated();
         
         // Deep clone the prepared report from the conversation and attach the uploaded video
         const resultData: PitchAnalysisResult = JSON.parse(JSON.stringify(PREPARED_FINNA_REPORT));
@@ -111,6 +137,9 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
       setSelectedFileName(file.name);
       setVideoPreviewUrl(URL.createObjectURL(file));
       setErrorMessage(null);
+      finnaAudio.playVideoSelected();
+      setTimeout(() => finnaAudio.playUploadCompleted(), 200);
+
       if (!startupName) {
         const nameWithoutExt = file.name.split('.')[0].replace(/[-_]/g, ' ');
         setStartupName(nameWithoutExt.length > 25 ? 'FINNA' : nameWithoutExt);
@@ -125,6 +154,9 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
       setSelectedFileName(file.name);
       setVideoPreviewUrl(URL.createObjectURL(file));
       setErrorMessage(null);
+      finnaAudio.playVideoSelected();
+      setTimeout(() => finnaAudio.playUploadCompleted(), 200);
+
       if (!startupName) {
         const nameWithoutExt = file.name.split('.')[0].replace(/[-_]/g, ' ');
         setStartupName(nameWithoutExt.length > 25 ? 'FINNA' : nameWithoutExt);
@@ -140,7 +172,7 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
           <div className="flex items-center gap-4">
             <button
               onClick={onBackToHome}
-              className="text-[#47464a] hover:text-[#000000] p-1.5 rounded-full hover:bg-[#f3f3f3] transition-colors"
+              className="text-[#47464a] hover:text-[#000000] p-1.5 rounded-full hover:bg-[#f3f3f3] transition-colors cursor-pointer"
               title="Back to home"
             >
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -153,15 +185,63 @@ export const UploadAndAnalysisView: React.FC<UploadAndAnalysisViewProps> = ({
               </span>
             </div>
           </div>
+
+          <div className="flex items-center gap-4 sm:gap-6">
+            {onOpenHowItWorks && (
+              <button
+                type="button"
+                onClick={onOpenHowItWorks}
+                className="text-[#52525b] hover:text-[#4b41e1] transition-colors text-xs font-semibold uppercase tracking-wider font-heading cursor-pointer hidden sm:block"
+              >
+                How it works
+              </button>
+            )}
+            {onOpenAbout && (
+              <button
+                type="button"
+                onClick={onOpenAbout}
+                className="text-[#52525b] hover:text-[#4b41e1] transition-colors text-xs font-semibold uppercase tracking-wider font-heading cursor-pointer hidden sm:block"
+              >
+                About
+              </button>
+            )}
+
+            {/* Sound On / Off Control */}
+            <button
+              type="button"
+              onClick={toggleSoundControl}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-heading font-medium transition-all cursor-pointer ${
+                isSoundOn
+                  ? 'bg-[#eeecfc] text-[#4b41e1] border-[#4b41e1]/30 hover:bg-[#e0dcfc]'
+                  : 'bg-[#f4f4f5] text-[#71717a] border-[#e4e4e7] hover:bg-[#e4e4e7]'
+              }`}
+              title={isSoundOn ? 'Sound notification effects are On' : 'Sound notification effects are Off'}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {isSoundOn ? 'volume_up' : 'volume_off'}
+              </span>
+              <span className="hidden sm:inline">
+                {isSoundOn ? 'Sound On' : 'Sound Muted'}
+              </span>
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center pt-12 pb-20 px-6 md:px-12">
+      <main className="flex-grow flex items-center justify-center pt-12 pb-20 px-6 md:px-12 relative z-10">
         <div className="max-w-[1280px] w-full mx-auto flex justify-center">
           {!isAnalyzing ? (
             /* Upload Workspace (Screen 1 / FINNA Pitch Upload) */
-            <div className="w-full max-w-2xl bg-white border border-[#c8c5ca] rounded-xl p-8 md:p-10 transition-all opacity-100 flex flex-col items-center text-center shadow-sm">
+            <div className="w-full max-w-2xl bg-white/90 backdrop-blur-xl border border-[#c8c5ca] rounded-xl p-8 md:p-10 transition-all opacity-100 flex flex-col items-center text-center shadow-lg">
+              {/* Spidey Host Badge */}
+              <div className="mb-4">
+                <SpideyBadge
+                  label="HOST SPIDEY • MULTIMODAL AUDIT"
+                  onClick={() => spideyVoice.speakUploadGuide()}
+                />
+              </div>
+
               <h1 className="font-heading text-2xl sm:text-3xl md:text-[32px] font-medium text-[#000000] mb-2 tracking-[-0.02em]">
                 Upload your FINNA pitch video
               </h1>
